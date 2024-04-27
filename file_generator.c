@@ -2,61 +2,58 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define FILE_SIZE 10485760 // Tamanho do arquivo (10 MB)
+#define FILE_SIZE 10485760 // 10 MB em bytes
 
-// Função para gerar números aleatórios de 0 a 255..
-int generateRandomNumber() {
+// Função para gerar números aleatórios de 0 a 255
+unsigned char generateRandomNumber() {
     return rand() % 256;
 }
 
-// Função para gerar números não aleatórios.
-int generateNonRandomNumber() {
-    static int num = 0;
-    num = (num + 1) % 256;
-    return num;
+// Função para gerar números aleatórios restritos de 0 a 25
+unsigned char generateRestrictedRandomNumber() {
+    return rand() % 26;
 }
 
 int main() {
-    FILE *randomFile, *restrictedRandomFile, *nonRandomFile;
+    FILE *file_random, *file_restricted, *file_non_random;
     int i;
 
-    // Abrir arquivos para escrita em modo binário.
-    randomFile = fopen("random.bin", "wb");
-    restrictedRandomFile = fopen("restricted_random.bin", "wb");
-    nonRandomFile = fopen("non_random.bin", "wb");
+    // Abrindo arquivos para escrita em modo binário
+    file_random = fopen("random.bin", "wb");
+    file_restricted = fopen("restricted.bin", "wb");
+    file_non_random = fopen("non_random.bin", "wb");
 
-    if (randomFile == NULL || restrictedRandomFile == NULL || nonRandomFile == NULL) {
-        printf("Erro ao abrir arquivos.");
+    // Verificando se os arquivos foram abertos corretamente
+    if (file_random == NULL || file_restricted == NULL || file_non_random == NULL) {
+        printf("Erro ao abrir os arquivos.");
         return 1;
     }
 
-    // Semente para o gerador de números aleatórios.
+    // Semente para geração de números aleatórios
     srand(time(NULL));
 
-    // Gerar arquivo completamente aleatório.
+    // Modo completamente aleatório
     for (i = 0; i < FILE_SIZE; i++) {
-        unsigned char randomNumber = generateRandomNumber();
-        fwrite(&randomNumber, sizeof(unsigned char), 1, randomFile);
+        unsigned char random_number = generateRandomNumber();
+        fwrite(&random_number, sizeof(unsigned char), 1, file_random);
     }
 
-    // Gerar arquivo aleatório restrito.
+    // Modo aleatório restrito
     for (i = 0; i < FILE_SIZE; i++) {
-        unsigned char randomNumber = generateRandomNumber();
-        if (randomNumber < 26) {
-            fwrite(&randomNumber, sizeof(unsigned char), 1, restrictedRandomFile);
-        }
+        unsigned char restricted_number = generateRestrictedRandomNumber();
+        fwrite(&restricted_number, sizeof(unsigned char), 1, file_restricted);
     }
 
-    // Gerar arquivo não aleatório (sequências repetidas).
-    for (i = 0; i < FILE_SIZE; i++) {
-        unsigned char nonRandomNumber = generateNonRandomNumber();
-        fwrite(&nonRandomNumber, sizeof(unsigned char), 1, nonRandomFile);
+    // Modo não aleatório
+    while (ftell(file_non_random) < FILE_SIZE) {
+        unsigned char byte = ftell(file_non_random) % 256; // Sequência de números de 0 a 255
+        fwrite(&byte, sizeof(unsigned char), 1, file_non_random);
     }
 
-    // Fechar arquivos.
-    fclose(randomFile);
-    fclose(restrictedRandomFile);
-    fclose(nonRandomFile);
+    // Fechando os arquivos
+    fclose(file_random);
+    fclose(file_restricted);
+    fclose(file_non_random);
 
     printf("Arquivos gerados com sucesso.\n");
 
